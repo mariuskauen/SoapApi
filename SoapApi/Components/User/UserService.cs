@@ -32,12 +32,7 @@ namespace SoapApi.Services
                 LastOnline = DateTime.Now,
                 DateJoined = DateTime.Now,
                 Status = Status.Online,
-                Settings = "",
-                ProfilePicture = "",
-                Conversations = new List<string>(),
-                Servers = new List<string>(),
-                FriendShips = new List<string>(),
-                FriendRequests = new List<string>()
+                ProfilePicture = ""
             };
 
             await _command.Post(newUser, query);

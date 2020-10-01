@@ -1,4 +1,5 @@
-﻿using SoapApi.Data.Repositories;
+﻿using Microsoft.EntityFrameworkCore;
+using SoapApi.Data;
 using SoapApi.Models;
 using System.Threading.Tasks;
 
@@ -6,21 +7,17 @@ namespace SoapApi.Services
 {
     public class AuthService
     {
-        private readonly CommandRepository _command;
-        private readonly QueryRepository _query;
-        private readonly UserService _user;
+        private readonly SoapApiContext context;
 
-        public AuthService(QueryRepository query, CommandRepository command, UserService user)
+        public AuthService(SoapApiContext context)
         {
-            _query = query;
-            _command = command;
-            _user = user;
+            this.context = context;
+            this.context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         }
 
-        public async Task<Auth> Login(string username, string password)
+        public async Task<User> Login(string username, string password)
         {
-            string query = "Auth:Username:" + username;
-            var user = await _query.GetSingle(new Auth(), new Auth(), query);
+            User user = await context.Users.FirstOrDefaultAsync(x => x.Username == username);
             if (user == null)
                 return null;
             if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
@@ -29,25 +26,24 @@ namespace SoapApi.Services
             return user;
         }
 
-        public async Task<Auth> Register(Auth user, string password)
+        public async Task<bool> Register(User user, string password)
         {
             byte[] passwordHash, passwordSalt;
             CreatePasswordHash(password, out passwordHash, out passwordSalt);
 
             user.PasswordHash = passwordHash;
             user.PasswordSalt = passwordSalt;
-            string query = "Auth";
 
-            await _command.Post(user, query);
-            await _user.InitializeUser(user.Id, user.Username);
+            await context.Users.AddAsync(user);
+            await context.SaveChangesAsync();
 
-            return user;
+            return true;
         }
 
-        public async Task<bool> UserExists(string username)
+        public async Task<bool> UsernameExists(string username)
         {
             string query = "Auth:Username:" + username;
-            if (await _query.GetSingle(new Auth(), new Auth(), query) == null)
+            if (await context.Users.FirstOrDefaultAsync(x => x.Username == username) == null)
                 return false;
             return true;
         }
@@ -77,8 +73,7 @@ namespace SoapApi.Services
 
         public async Task<bool> IdExists(string Id)
         {
-            string query = "Auth:_id:" + Id;
-            if (await _query.GetSingle(new Auth(), new Auth(), query) == null)
+            if (await context.Users.FirstOrDefaultAsync(d => d.Id == Id) == null)
                 return false;
             return true;
         }

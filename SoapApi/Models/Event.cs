@@ -5,16 +5,12 @@ using System.Threading.Tasks;
 
 namespace SoapApi.Models
 {
-    public class Server
+    public class Event
     {
         public string Id { get; set; }
 
-        public string Name { get; set; }
+        public string Navn { get; set; }
 
         public string OwnerId { get; set; }
-
-        public List<string> UserIds { get; set; }
-
-        public List<string> ChannelIds { get; set; }
     }
 }

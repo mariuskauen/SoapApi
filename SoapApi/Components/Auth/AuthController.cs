@@ -3,7 +3,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using SoapApi.Components.Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -28,13 +27,17 @@ namespace SoapApi.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(Register reg)
         {
-            reg.Username = reg.Username.ToLower();
-            if (await auth.UserExists(reg.Username))
+            if (await auth.UsernameExists(reg.Username.ToLower()))
                 return BadRequest("Username already exists!");
-            var userToCreate = new Auth
+
+            User userToCreate = new User
             {
                 Id = Guid.NewGuid().ToString(),
-                Username = reg.Username
+                Username = reg.Username,
+                Status = Status.Online,
+                DateJoined = DateTime.UtcNow,
+                LastOnline = DateTime.UtcNow,
+                ProfilePicture = "blabla"
             };
 
             while (await auth.IdExists(userToCreate.Id))
@@ -42,15 +45,16 @@ namespace SoapApi.Controllers
                 userToCreate.Id = Guid.NewGuid().ToString();
             }
 
-            var createdUser = await auth.Register(userToCreate, reg.Password);
+            if (await auth.Register(userToCreate, reg.Password))
+                return Ok();
 
-            return StatusCode(201);
+            return StatusCode(400);
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(Login vm)
         {
-            var userFromRepo = await auth.Login(vm.Username.ToLower(), vm.Password);
+            User userFromRepo = await auth.Login(vm.Username.ToLower(), vm.Password);
             if (userFromRepo == null)
             {
                 return BadRequest();

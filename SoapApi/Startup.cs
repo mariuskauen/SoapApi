@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -12,6 +12,8 @@ using Microsoft.OpenApi.Models;
 using SoapApi.Services;
 using SoapApi.Data.Repositories;
 using SoapApi.Helpers;
+using Microsoft.EntityFrameworkCore;
+using SoapApi.Data;
 
 namespace SoapApi
 {
@@ -34,12 +36,12 @@ namespace SoapApi
                 sp.GetRequiredService<IOptions<MongoSettings>>().Value);
             services.AddControllers();
             services.AddScoped<AuthService>();
+            services.AddScoped<EventService>();
             services.AddScoped<QueryRepository>();
             services.AddScoped<CommandRepository>();
             services.AddScoped<UserService>();
-            services.AddScoped<ChannelService>();
+            services.AddScoped<RelationsService>();
             services.AddScoped<MapConfig>();
-            services.AddScoped<ServerService>();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
@@ -69,6 +71,9 @@ namespace SoapApi
                     }
                 };
             });
+
+            services.AddDbContext<SoapApiContext>(options =>
+                    options.UseSqlServer(Configuration.GetConnectionString("SoapApiContext")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

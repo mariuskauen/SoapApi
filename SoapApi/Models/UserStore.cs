@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Principal;
 using System.Threading.Tasks;
 
 namespace SoapApi.Models
 {
-    public class Channel
+    public class UserStore
     {
         public string Id { get; set; }
-
-        public string Name { get; set; }
-
-        public string ServerId { get; set; }
+        public List<string> UserIds { get; set; }
     }
 }

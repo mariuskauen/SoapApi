@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 
 namespace SoapApi.Models
 {
-    public class Auth
+    public class FriendRequest
     {
         public string Id { get; set; }
 
-        public string Username { get; set; }
+        public string SenderId { get; set; }
 
-        public byte[] PasswordHash { get; set; }
+        public string ReceiverId { get; set; }
 
-        public byte[] PasswordSalt { get; set; }
+        public bool IsActive { get; set; }
     }
 }

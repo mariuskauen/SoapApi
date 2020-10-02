@@ -2,13 +2,10 @@
 using Neo4j.Driver;
 using Newtonsoft.Json;
 using SoapApi.Data;
-using SoapApi.Data.Repositories;
 using SoapApi.Helpers;
 using SoapApi.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -47,8 +44,9 @@ namespace SoapApi.Services
             return dto;
         }
 
-        public async Task GetMyRequests(string userId)
+        public async Task<List<User>> GetMyRequests(string userId)
         {
+            List<User> myFriends = new List<User>();
             IResultCursor cursor;
             IAsyncSession session = _driver.AsyncSession();
             string json = "";
@@ -57,18 +55,17 @@ namespace SoapApi.Services
             try
             {
                 string cypher = new StringBuilder()
-                .AppendLine("UNWIND $users AS user")
+                .Append("MATCH (n:User {Id: '" + userId + "'})-[:KNOWS]->(m) WHERE NOT (m)-[:KNOWS]->(n) RETURN m")
                 .ToString();
 
                 cursor = await session.RunAsync(cypher);
-                var result = await cursor.SingleAsync(r => r.Values["n"].As<INode>());
+                var result = await cursor.ToListAsync(r => r.Values["m"].As<INode>());
 
-                //json = JsonConvert.SerializeObject(result);
-                //node = JsonConvert.DeserializeObject<Node>(json);
-                json = JsonConvert.SerializeObject(result.Properties);
-                //newUser = JsonConvert.DeserializeObject<User>(json);
-
-
+                foreach (INode node in result)
+                {
+                    json = JsonConvert.SerializeObject(node.Properties);
+                    myFriends.Add(JsonConvert.DeserializeObject<User>(json));
+                }
             }
             catch (Exception ex)
             {
@@ -78,6 +75,42 @@ namespace SoapApi.Services
             {
                 await session.CloseAsync();
             }
+
+            return myFriends;
+        }
+        public async Task<List<User>> GetInboundRequests(string userId)
+        {
+            List<User> myFriends = new List<User>();
+            IResultCursor cursor;
+            IAsyncSession session = _driver.AsyncSession();
+            string json = "";
+            //Node node = new Node();
+
+            try
+            {
+                string cypher = new StringBuilder()
+                .Append("MATCH (n:User {Id: '" + userId + "'})<-[:KNOWS]-(m) WHERE NOT (m)<-[:KNOWS]-(n) RETURN m")
+                .ToString();
+
+                cursor = await session.RunAsync(cypher);
+                var result = await cursor.ToListAsync(r => r.Values["m"].As<INode>());
+
+                foreach (INode node in result)
+                {
+                    json = JsonConvert.SerializeObject(node.Properties);
+                    myFriends.Add(JsonConvert.DeserializeObject<User>(json));
+                }
+            }
+            catch (Exception ex)
+            {
+                string exep = ex.ToString();
+            }
+            finally
+            {
+                await session.CloseAsync();
+            }
+
+            return myFriends;
         }
 
         public async Task SendRequest(FriendRequest req)

@@ -67,10 +67,18 @@ namespace SoapApi.Controllers
         }
 
         [HttpGet("getmyrequests")]
-        public async Task<ActionResult<RequestContainerDTO>> GetMyRequests()
+        public async Task<ActionResult<List<User>>> GetMyRequests()
         {
             var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            return await service.GetRequests(userId);
+
+            return await service.GetMyRequests(userId);
+        }
+        [HttpGet("getinboundrequests")]
+        public async Task<ActionResult<List<User>>> GetInboundRequests()
+        {
+            var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+            return await service.GetInboundRequests(userId);
         }
 
         [HttpPost("acceptrequest/{friendId}")]

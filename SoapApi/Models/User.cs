@@ -15,20 +15,10 @@ namespace SoapApi.Models
 
         public string Lastname { get; set; }
 
-        public Status Status { get; set; }
-
         public string ProfilePicture { get; set; }
 
         public DateTime DateJoined { get; set; }
 
         public DateTime LastOnline { get; set; }
-
-        public byte[] PasswordHash { get; set; }
-
-        public byte[] PasswordSalt { get; set; }
-
-        public string MyEventStore { get; set; }
-
-        public string AttendingEventStore { get; set; }
     }
 }

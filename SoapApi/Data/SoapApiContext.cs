@@ -14,11 +14,6 @@ namespace SoapApi.Data
         {
         }
 
-        public DbSet<FriendRequest> FriendRequest { get; set; }
-        public DbSet<User> Users { get; set; }
-
-        public DbSet<Friendship> Friendships { get; set; }
-
-        public DbSet<Event> Events { get; set; }
+        public DbSet<Auth> Auths { get; set; }
     }
 }

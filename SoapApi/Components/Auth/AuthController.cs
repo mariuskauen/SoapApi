@@ -15,54 +15,54 @@ namespace SoapApi.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly AuthService auth;
+        private readonly AuthService _auth;
         private readonly IConfiguration config;
+        private readonly UserService _user;
 
-        public AuthController(AuthService auth, IConfiguration config)
+        public AuthController(AuthService auth, IConfiguration config, UserService user)
         {
-            this.auth = auth;
+            _auth = auth;
             this.config = config;
+            _user = user;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(Register reg)
         {
-            if (await auth.UsernameExists(reg.Username.ToLower()))
+            if (await _auth.UsernameExists(reg.Username.ToLower()))
                 return BadRequest("Username already exists!");
 
-            User userToCreate = new User
+            Auth auth = new Auth()
             {
                 Id = Guid.NewGuid().ToString(),
-                Username = reg.Username,
-                Status = Status.Online,
-                DateJoined = DateTime.UtcNow,
-                LastOnline = DateTime.UtcNow,
-                ProfilePicture = "blabla"
+                Username = reg.Username
             };
 
-            while (await auth.IdExists(userToCreate.Id))
+            while (await _auth.IdExists(auth.Id))
             {
-                userToCreate.Id = Guid.NewGuid().ToString();
+                auth.Id = Guid.NewGuid().ToString();
             }
 
-            if (await auth.Register(userToCreate, reg.Password))
+            if (await _auth.Register(auth, reg.Password))
+            {
+                await _user.InitializeUser(auth.Id, auth.Username);
                 return Ok();
-
+            }
             return StatusCode(400);
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(Login vm)
         {
-            User userFromRepo = await auth.Login(vm.Username.ToLower(), vm.Password);
-            if (userFromRepo == null)
+            Auth authFromRepo = await _auth.Login(vm.Username.ToLower(), vm.Password);
+            if (authFromRepo == null)
             {
                 return BadRequest();
             }
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, userFromRepo.Id.ToString()),
-                new Claim(ClaimTypes.Name, userFromRepo.Username)
+                new Claim(ClaimTypes.NameIdentifier, authFromRepo.Id.ToString()),
+                new Claim(ClaimTypes.Name, authFromRepo.Username)
             };
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.GetSection("AppSettings:Token").Value));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);

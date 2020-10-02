@@ -14,6 +14,7 @@ using SoapApi.Data.Repositories;
 using SoapApi.Helpers;
 using Microsoft.EntityFrameworkCore;
 using SoapApi.Data;
+using Neo4j.Driver;
 
 namespace SoapApi
 {
@@ -35,6 +36,7 @@ namespace SoapApi
             services.AddSingleton<IMongoSettings>(sp =>
                 sp.GetRequiredService<IOptions<MongoSettings>>().Value);
             services.AddControllers();
+            services.AddSingleton(GraphDatabase.Driver("bolt://localhost:7687", AuthTokens.Basic("neo4j", "Ont34eyOnt34ey")));
             services.AddScoped<AuthService>();
             services.AddScoped<EventService>();
             services.AddScoped<QueryRepository>();

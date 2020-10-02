@@ -15,26 +15,26 @@ namespace SoapApi.Services
             this.context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         }
 
-        public async Task<User> Login(string username, string password)
+        public async Task<Auth> Login(string username, string password)
         {
-            User user = await context.Users.FirstOrDefaultAsync(x => x.Username == username);
-            if (user == null)
+            Auth auth = await context.Auths.FirstOrDefaultAsync(x => x.Username == username);
+            if (auth == null)
                 return null;
-            if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+            if (!VerifyPasswordHash(password, auth.PasswordHash, auth.PasswordSalt))
                 return null;
 
-            return user;
+            return auth;
         }
 
-        public async Task<bool> Register(User user, string password)
+        public async Task<bool> Register(Auth auth, string password)
         {
             byte[] passwordHash, passwordSalt;
             CreatePasswordHash(password, out passwordHash, out passwordSalt);
 
-            user.PasswordHash = passwordHash;
-            user.PasswordSalt = passwordSalt;
+            auth.PasswordHash = passwordHash;
+            auth.PasswordSalt = passwordSalt;
 
-            await context.Users.AddAsync(user);
+            await context.Auths.AddAsync(auth);
             await context.SaveChangesAsync();
 
             return true;
@@ -43,7 +43,7 @@ namespace SoapApi.Services
         public async Task<bool> UsernameExists(string username)
         {
             string query = "Auth:Username:" + username;
-            if (await context.Users.FirstOrDefaultAsync(x => x.Username == username) == null)
+            if (await context.Auths.FirstOrDefaultAsync(x => x.Username == username) == null)
                 return false;
             return true;
         }
@@ -73,7 +73,7 @@ namespace SoapApi.Services
 
         public async Task<bool> IdExists(string Id)
         {
-            if (await context.Users.FirstOrDefaultAsync(d => d.Id == Id) == null)
+            if (await context.Auths.FirstOrDefaultAsync(d => d.Id == Id) == null)
                 return false;
             return true;
         }

@@ -35,9 +35,9 @@ namespace SoapApi.Services
             };
 
             string queryString = "UserStore";
-            await command.Post(userStore, queryString);
-            await context.Events.AddAsync(newEvent);
-            await context.SaveChangesAsync();
+            //await command.Post(userStore, queryString);
+            //await context.Events.AddAsync(newEvent);
+            //await context.SaveChangesAsync();
 
             return;
         }

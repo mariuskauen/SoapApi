@@ -10,8 +10,8 @@ using SoapApi.Data;
 namespace SoapApi.Migrations
 {
     [DbContext(typeof(SoapApiContext))]
-    [Migration("20201001120632_ChangedRequest")]
-    partial class ChangedRequest
+    [Migration("20201002114002_Init")]
+    partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -21,38 +21,10 @@ namespace SoapApi.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("SoapApi.Models.FriendRequest", b =>
+            modelBuilder.Entity("SoapApi.Models.Auth", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Users")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("FriendRequest");
-                });
-
-            modelBuilder.Entity("SoapApi.Models.User", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("DateJoined")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Firstname")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("LastOnline")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Lastname")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<byte[]>("PasswordHash")
                         .HasColumnType("varbinary(max)");
@@ -60,18 +32,12 @@ namespace SoapApi.Migrations
                     b.Property<byte[]>("PasswordSalt")
                         .HasColumnType("varbinary(max)");
 
-                    b.Property<string>("ProfilePicture")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
                     b.Property<string>("Username")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Auths");
                 });
 #pragma warning restore 612, 618
         }

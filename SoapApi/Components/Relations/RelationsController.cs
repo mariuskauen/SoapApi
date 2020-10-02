@@ -73,24 +73,18 @@ namespace SoapApi.Controllers
             return await service.GetRequests(userId);
         }
 
-        [HttpPost("acceptrequest/{requestId}")]
-        public async Task<ActionResult> AcceptRequest(string requestId)
+        [HttpPost("acceptrequest/{friendId}")]
+        public async Task<ActionResult> AcceptRequest(string friendId)
         {
             var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
 
-            string status = await service.AcceptRequest(userId, requestId);
-            if (status == "Ok")
-            {
-                return Ok();
-            }
-            else
-            {
-                return BadRequest(status);
-            }
+            await service.AcceptRequest(userId, friendId);
+
+            return Ok();
         }
 
         [HttpGet("getmyfriends")]
-        public async Task<ActionResult<List<Friendship>>> GetMyFriends()
+        public async Task<ActionResult<List<User>>> GetMyFriends()
         {
             var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             return await service.GetMyFriends(userId);

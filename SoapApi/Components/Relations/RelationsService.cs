@@ -14,13 +14,11 @@ namespace SoapApi.Services
     public class RelationsService
     {
         private readonly SoapApiContext context;
-        private readonly MapConfig mapConfig;
         private readonly IDriver _driver;
 
-        public RelationsService(SoapApiContext context, MapConfig mapConfig, IDriver driver)
+        public RelationsService(SoapApiContext context, IDriver driver)
         {
             this.context = context;
-            this.mapConfig = mapConfig;
             _driver = driver;
         }
         public async Task<bool> CheckIfUserExist(string userId)

@@ -23,17 +23,18 @@ namespace SoapApi.Controllers
         }
 
         [HttpPost("newevent/{name}")]
-        public async Task<ActionResult> NewEvent(string name)
+        public async Task<ActionResult<Event>> NewEvent(string name)
         {
             var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            await service.CreateEvent(name, userId);
-            return Ok();
+            
+            return Ok(await service.CreateEvent(name, userId));
         }
-
-        [HttpGet("geteventusers/{eventid}")]
-        public async Task<UserStore> GetEventUsers(string eventid)
+        [HttpGet("getownedevents")]
+        public async Task<ActionResult<List<Event>>> GetOwnedEvents()
         {
-            return await service.GetEventUsers(eventid);
+            var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+            return Ok(await service.GetOwnedEvents(userId));
         }
     }
 }

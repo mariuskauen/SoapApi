@@ -1,25 +1,25 @@
-﻿using SoapApi.Data;
+﻿using Neo4j.Driver;
+using Newtonsoft.Json;
+using SoapApi.Data;
 using SoapApi.Data.Repositories;
+using SoapApi.Helpers;
 using SoapApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace SoapApi.Services
 {
     public class EventService
     {
-        private readonly CommandRepository command;
-        private readonly SoapApiContext context;
-        private readonly QueryRepository query;
-        public EventService(CommandRepository command, SoapApiContext context, QueryRepository query)
+        private readonly IDriver _driver;
+        public EventService(IDriver driver)
         {
-            this.command = command;
-            this.context = context;
-            this.query = query;
+            _driver = driver;
         }
-        public async Task CreateEvent(string name, string userId)
+        public async Task<Event> CreateEvent(string name, string userId)
         {
 
             Event newEvent = new Event()
@@ -28,24 +28,72 @@ namespace SoapApi.Services
                 Navn = name,
                 OwnerId = userId
             };
-            UserStore userStore = new UserStore()
+
+            IResultCursor cursor;
+            IAsyncSession session = _driver.AsyncSession();
+            string json = "";
+            //Node node = new Node();
+            var test = new Dictionary<string, object>() { { "events", ParameterSerializer.ToDictionary(new List<Event>() { newEvent }) } };
+            try
             {
-                Id = newEvent.Id,
-                UserIds = new List<string>() { userId }
-            };
+                string cypher = new StringBuilder()
+                .AppendLine("UNWIND $events AS event")
+                .AppendLine("MATCH (m:User) WHERE m.Id = '" + userId + "'")
+                .AppendLine("CREATE (n:Event) SET n = event")
+                .AppendLine("MERGE (m)-[r:OWNS]->(n)")
+                .AppendLine("RETURN n")
+                .ToString();
 
-            string queryString = "UserStore";
-            //await command.Post(userStore, queryString);
-            //await context.Events.AddAsync(newEvent);
-            //await context.SaveChangesAsync();
+                cursor = await session.RunAsync(cypher, test);
+                var result = await cursor.SingleAsync(r => r.Values["n"].As<INode>());
 
-            return;
+                json = JsonConvert.SerializeObject(result.Properties);
+
+            }
+            catch (Exception ex)
+            {
+                string exep = ex.ToString();
+            }
+            finally
+            {
+                await session.CloseAsync();
+            }
+
+            return newEvent;
         }
 
-        public async Task<UserStore> GetEventUsers(string eventId)
+        public async Task<List<Event>> GetOwnedEvents(string userId)
         {
-            string queryString = "UserStore:_id:"+ eventId;
-            return await query.GetSingle(new UserStore(), new UserStore(), queryString);
+            List<Event> events = new List<Event>();
+            IResultCursor cursor;
+            IAsyncSession session = _driver.AsyncSession();
+            string json = "";
+
+            try
+            {
+                string cypher = new StringBuilder()
+                .AppendLine("MATCH (n:User {Id: '" + userId + "'})-[:OWNS]->(m) RETURN m")
+                .ToString();
+
+                cursor = await session.RunAsync(cypher);
+                var result = await cursor.ToListAsync(r => r.Values["m"].As<INode>());
+
+                foreach (INode node in result)
+                {
+                    json = JsonConvert.SerializeObject(node.Properties);
+                    events.Add(JsonConvert.DeserializeObject<Event>(json));
+                }
+            }
+            catch (Exception ex)
+            {
+                string exep = ex.ToString();
+            }
+            finally
+            {
+                await session.CloseAsync();
+            }
+
+            return events;
         }
     }
 }

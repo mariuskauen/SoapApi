@@ -41,6 +41,7 @@ namespace SoapApi.Services
                 .AppendLine("MATCH (m:User) WHERE m.Id = '" + userId + "'")
                 .AppendLine("CREATE (n:Event) SET n = event")
                 .AppendLine("MERGE (m)-[r:OWNS]->(n)")
+                .AppendLine("MERGE (m)-[s:ATTENDS]->(n)")
                 .AppendLine("RETURN n")
                 .ToString();
 
@@ -94,6 +95,107 @@ namespace SoapApi.Services
             }
 
             return events;
+        }
+
+        public async Task<List<Event>> GetAttendingEvents(string userId)
+        {
+            List<Event> events = new List<Event>();
+            IResultCursor cursor;
+            IAsyncSession session = _driver.AsyncSession();
+            string json = "";
+
+            try
+            {
+                string cypher = new StringBuilder()
+                .AppendLine("MATCH (n:User {Id: '" + userId + "'})-[:ATTENDS]->(m) RETURN m")
+                .ToString();
+
+                cursor = await session.RunAsync(cypher);
+                var result = await cursor.ToListAsync(r => r.Values["m"].As<INode>());
+
+                foreach (INode node in result)
+                {
+                    json = JsonConvert.SerializeObject(node.Properties);
+                    events.Add(JsonConvert.DeserializeObject<Event>(json));
+                }
+            }
+            catch (Exception ex)
+            {
+                string exep = ex.ToString();
+            }
+            finally
+            {
+                await session.CloseAsync();
+            }
+
+            return events;
+        }
+
+        public async Task<string> JoinEvent(string userId, string eventId)
+        {
+            IResultCursor cursor;
+            IAsyncSession session = _driver.AsyncSession();
+            try
+            {
+                string cypher = new StringBuilder()
+                .AppendLine("MATCH (n:User {Id: '" + userId + "'}), (m:Event {Id: '" + eventId + "'})")
+                .AppendLine("MERGE (n)-[r:ATTENDS]->(m)")
+                .AppendLine("RETURN (m)")
+                .ToString();
+
+                cursor = await session.RunAsync(cypher);
+                //var result = await cursor.ToListAsync(r => r.Values["m"].As<INode>());
+
+                //foreach (INode node in result)
+                //{
+                //    json = JsonConvert.SerializeObject(node.Properties);
+                //    if (json.Contains(eventId))
+                //        return "Nope!";
+                //    events.Add(JsonConvert.DeserializeObject<Event>(json));
+                //}
+
+                //cypher = new StringBuilder()
+                //    .AppendLine("MATCH (n:User {Id: '" + userId + "'})")
+                //    .AppendLine("MATCH (m:Event {Id: '" + eventId + "'})")
+                //    .AppendLine("").ToString();
+            }
+            catch (Exception ex)
+            {
+                string exep = ex.ToString();
+            }
+            finally
+            {
+                await session.CloseAsync();
+            }
+
+
+            return "Ok";
+        }
+
+        public async Task<string> LeaveEvent(string userId, string eventId)
+        {
+            IResultCursor cursor;
+            IAsyncSession session = _driver.AsyncSession();
+            try
+            {
+                string cypher = new StringBuilder()
+                .AppendLine("MATCH (n:User {Id: '" + userId + "'})-[r:ATTENDS]->(m:Event {Id: '" + eventId + "'})")
+                .AppendLine("DELETE r")
+                .AppendLine("RETURN (m)")
+                .ToString();
+
+                cursor = await session.RunAsync(cypher);
+            }
+            catch (Exception ex)
+            {
+                string exep = ex.ToString();
+            }
+            finally
+            {
+                await session.CloseAsync();
+            }
+
+            return "Ok";
         }
     }
 }

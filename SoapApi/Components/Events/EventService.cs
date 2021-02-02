@@ -197,5 +197,38 @@ namespace SoapApi.Services
 
             return "Ok";
         }
+
+        public async Task<List<Event>> GetAllEvents(string userId)
+        {
+            List<Event> events = new List<Event>();
+            IResultCursor cursor;
+            IAsyncSession session = _driver.AsyncSession();
+            string json = "";
+
+            try
+            {
+                string cypher = new StringBuilder()
+                .AppendLine("MATCH (m:Event) RETURN m")
+                .ToString();
+
+                cursor = await session.RunAsync(cypher);
+                var result = await cursor.ToListAsync(r => r.Values["m"].As<INode>());
+
+                foreach (INode node in result)
+                {
+                    json = JsonConvert.SerializeObject(node.Properties);
+                    events.Add(JsonConvert.DeserializeObject<Event>(json));
+                }
+            }
+            catch (Exception ex)
+            {
+                string exep = ex.ToString();
+            }
+            finally
+            {
+                await session.CloseAsync();
+            }
+            return events;
+        }
     }
 }

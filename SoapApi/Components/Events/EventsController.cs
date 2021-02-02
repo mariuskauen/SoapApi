@@ -60,5 +60,13 @@ namespace SoapApi.Controllers
             string status = await service.LeaveEvent(userId, eventId);
             return Ok(status);
         }
+
+        [HttpGet("getallevents")]
+        public async Task<ActionResult<List<Event>>> GetAllEvents()
+        {
+            var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+            return Ok(await service.GetAllEvents(userId));
+        }
     }
 }

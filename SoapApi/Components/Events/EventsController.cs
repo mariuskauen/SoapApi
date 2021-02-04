@@ -61,12 +61,13 @@ namespace SoapApi.Controllers
             return Ok(status);
         }
 
+        [AllowAnonymous]
         [HttpGet("getallevents")]
         public async Task<ActionResult<List<Event>>> GetAllEvents()
         {
-            var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            
 
-            return Ok(await service.GetAllEvents(userId));
+            return Ok(await service.GetAllEvents());
         }
     }
 }

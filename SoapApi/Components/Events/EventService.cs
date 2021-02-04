@@ -198,7 +198,7 @@ namespace SoapApi.Services
             return "Ok";
         }
 
-        public async Task<List<Event>> GetAllEvents(string userId)
+        public async Task<List<Event>> GetAllEvents()
         {
             List<Event> events = new List<Event>();
             IResultCursor cursor;
